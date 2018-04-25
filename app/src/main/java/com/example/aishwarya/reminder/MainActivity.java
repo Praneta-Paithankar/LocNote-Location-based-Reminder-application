@@ -1,10 +1,12 @@
 package com.example.aishwarya.reminder;
 
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -41,7 +43,6 @@ public class MainActivity extends AppCompatActivity {
         if(AllAlarms.size() != 0)
         {
             System.out.println(AllAlarms);
-           // String title = AllAlarms.get(1).getMtitle();
             for(int i =0;i<AllAlarms.size();i++){
                 item_alarm.add("Title:"+AllAlarms.get(i).getMtitle() +
                         "\n"+ "Date:"+AllAlarms.get(i).getMdate() +
@@ -157,4 +158,26 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
+
+    private boolean isMyServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                Log.i ("isMyServiceRunning?", true+"");
+                return true;
+            }
+        }
+        Log.i ("isMyServiceRunning?", false+"");
+        return false;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        Intent intent = new Intent(this, LocationService.class);
+        if (!isMyServiceRunning(LocationService.class)) {
+            startService(intent);
+        }    }
 }
+

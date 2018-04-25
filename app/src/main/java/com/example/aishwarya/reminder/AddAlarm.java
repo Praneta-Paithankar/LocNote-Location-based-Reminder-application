@@ -33,6 +33,8 @@ import android.widget.TimePicker;
 import android.widget.Toast;
 
 import java.sql.Timestamp;
+import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -49,12 +51,12 @@ public class AddAlarm extends AppCompatActivity implements TimeDistanceCalculati
     final static int req1 = 1;
     double latitude;
     double longitude;
-
+    long selected_timestamp = 0;
     String Address;
     public String a = "0";
     int day, year, month, mHour, mMinute;
     private static final String TAG = "MainActivity";
-
+    String current_date;
     private static final int ERROR_DIALOG_REQUEST = 9001;
 
     @Override
@@ -71,10 +73,10 @@ public class AddAlarm extends AppCompatActivity implements TimeDistanceCalculati
 
         calendar = Calendar.getInstance();
         year = calendar.get(Calendar.YEAR);
-        cal = Calendar.getInstance();
+      //  cal = Calendar.getInstance();
         month = calendar.get(Calendar.MONTH);
         day = calendar.get(Calendar.DAY_OF_MONTH);
-        showDate(year, month + 1, day);
+        current_date = String.valueOf(showDate(year, month + 1, day));
         Bundle b = getIntent().getExtras();
         if(b!=null){
             reminder_title.setText(b.getString("title"));
@@ -96,8 +98,10 @@ public class AddAlarm extends AppCompatActivity implements TimeDistanceCalculati
     protected Dialog onCreateDialog(int id) {
         // TODO Auto-generated method stub
         if (id == 999) {
-            return new DatePickerDialog(this,
+            DatePickerDialog datePickerDialog = new DatePickerDialog(this,
                     myDateListener, year, month, day);
+            datePickerDialog.getDatePicker().setMinDate(System.currentTimeMillis() - 1000);
+            return datePickerDialog;
         }
         return null;
     }
@@ -111,19 +115,15 @@ public class AddAlarm extends AppCompatActivity implements TimeDistanceCalculati
                 }
             };
 
-    private void showDate(int year, int month, int day) {
-        mdate = new StringBuilder().append(day).append("/")
-                .append(month).append("/").append(year);
-//        if(year>=cal.get(Calendar.DATE) && month>=cal.get(Calendar.MONTH) && day>=cal.get(Calendar.YEAR)) {
-//            cal.set(Calendar.DATE, day);  //1-31
-//            cal.set(Calendar.MONTH, month);  //first month is 0!!! January is zero!!!
-//            cal.set(Calendar.YEAR, year);
+    private StringBuilder showDate(int year, int month, int day) {
+        mdate = new StringBuilder().append(day).append("-")
+                .append(month).append("-").append(year);
+            calendar.set(Calendar.DATE, day);  //1-31
+            calendar.set(Calendar.MONTH, month);  //first month is 0!!! January is zero!!!
+            calendar.set(Calendar.YEAR, year);
 
             datetext.setText(mdate);
-//        }
-//        else{
-//            Toast.makeText(AddAlarm.this, " Select valid date", Toast.LENGTH_SHORT).show();
-//        }
+            return mdate;
     }
 
     //time picker dialog
@@ -132,11 +132,14 @@ public class AddAlarm extends AppCompatActivity implements TimeDistanceCalculati
         final Calendar c = Calendar.getInstance();
         mHour = c.get(Calendar.HOUR_OF_DAY);
         mMinute = c.get(Calendar.MINUTE);
-        cal.set(Calendar.HOUR_OF_DAY, mHour);  //HOUR
-        cal.set(Calendar.MINUTE, mMinute);
-        cal.set(Calendar.SECOND, 0);
+//        cal.set(Calendar.HOUR_OF_DAY, mHour);  //HOUR
+//        cal.set(Calendar.MINUTE, mMinute);
+//        cal.set(Calendar.SECOND, 0);
+
+
+
         // Launch Time Picker Dialog
-        TimePickerDialog timePickerDialog = new TimePickerDialog(this,
+       TimePickerDialog timePickerDialog = new TimePickerDialog(this,
                 new TimePickerDialog.OnTimeSetListener() {
 
                     @Override
@@ -152,13 +155,18 @@ public class AddAlarm extends AppCompatActivity implements TimeDistanceCalculati
                             am_pm = "PM";
                         String strHrsToShow = (calendar.get(Calendar.HOUR) == 0) ? "12" : calendar.get(Calendar.HOUR) + "";
                         mtime = strHrsToShow + ":" + calendar.get(Calendar.MINUTE) + " " + am_pm;
-                     //   if(calendar.getTimeInMillis() > calendar.getTimeInMillis() ){
-                            (timetext).setText(mtime);
 
-//                        }
-//                        else{
-//                            Toast.makeText(AddAlarm.this, " Select valid time", Toast.LENGTH_SHORT).show();
-//                        }
+                        Long k  = (calendar.getTimeInMillis());
+                        Long s = System.currentTimeMillis();
+                        long  l = s-k;
+                        if( (calendar.getTimeInMillis()-System.currentTimeMillis())<=0)
+                        {
+                            Toast.makeText(AddAlarm.this, " Please add valid time", Toast.LENGTH_SHORT).show();
+                            timetext.setText("");
+                        }
+                        else {
+                            (timetext).setText(mtime);
+                        }
                     }
                 }, mHour, mMinute, false);
         timePickerDialog.show();
@@ -171,6 +179,37 @@ public class AddAlarm extends AppCompatActivity implements TimeDistanceCalculati
             startActivityForResult(intent, 1);
         }
     }
+
+    //add reminder button
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    public void onClickAddReminder(View v) {
+
+        if (reminder_title != null) {
+            String title = reminder_title.getText().toString();
+            String date = datetext.getText().toString();
+            String time = timetext.getText().toString();
+            String address = destination_text.getText().toString();
+            try {
+                Log.d(TAG, "Timestamp"+ calendar.getTimeInMillis());
+            } catch(Exception e) {
+            }
+            Alarms alarms = new Alarms(title, date, time, latitude, longitude, address, selected_timestamp);
+
+            AlarmsDBHandler handler = new AlarmsDBHandler(this);
+          //  Alarms previous_alarm = handler.findPreviousAlarm(alarms);
+          //  long previous_timestamp = previous_alarm.getMtimestamp();
+          //  long actual_time_seconds = Math.abs(previous_timestamp-selected_timestamp);
+         //   Log.d(TAG," previous alarm fetched"+ actual_time_seconds);
+          //  ValidateTime(previous_alarm);
+            handler.addAlarm(alarms);
+
+            Toast.makeText(this, date + time +title + latitude+ longitude + Address+" Alarm added in database", Toast.LENGTH_SHORT).show();
+            Intent resultIntent = new Intent();
+            setResult(Activity.RESULT_OK, resultIntent);
+            finish();
+        }
+    }
+
 
     public boolean isServicesOK() {
         Log.d(TAG, "isServicesOK: checking google services version");
@@ -190,55 +229,6 @@ public class AddAlarm extends AppCompatActivity implements TimeDistanceCalculati
         return false;
     }
 
-    //add reminder button
-    @RequiresApi(api = Build.VERSION_CODES.M)
-    public void onClickAddReminder(View v) {
-
-        if (reminder_title != null) {
-                String title = reminder_title.getText().toString();
-                String date = datetext.getText().toString();
-                String time = timetext.getText().toString();
-                String address = destination_text.getText().toString();
-
-                Timestamp timestamp = null;
-                long timestamp_dummy = 0;
-                try {
-                   // SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy hh:mm");
-                   // Date parsedDate = dateFormat.parse(date + " "+ time);
-                    //timestamp = new java.sql.Timestamp(parsedDate.getTime());
-                    timestamp_dummy =  calendar.getTimeInMillis();
-                    Log.d(TAG, "TImestamp"+ calendar.getTimeInMillis());
-                } catch(Exception e) {
-                }
-                Alarms alarms = new Alarms(title, date, time, latitude, longitude, address, timestamp_dummy);
-
-                AlarmsDBHandler handler = new AlarmsDBHandler(this);
-                Alarms previous_alarm = handler.findPreviousAlarm(alarms);
-                long previous_timestamp = previous_alarm.getMtimestamp();
-                long actual_time_seconds = Math.abs(previous_timestamp-timestamp_dummy);
-
-                Log.d(TAG," previous alarm fetched"+ actual_time_seconds);
-                ValidateTime(previous_alarm);
-                handler.addAlarm(alarms);
-
-                Toast.makeText(this, date + time +title + latitude+ longitude + Address+" Alarm added in database", Toast.LENGTH_SHORT).show();
-                Intent resultIntent = new Intent();
-                setResult(Activity.RESULT_OK, resultIntent);
-                finish();
-
-//            // Create a new PendingIntent and add it to the AlarmManager
-//            PendingIntent pendingIntent = PendingIntent.getService(this, 0,intent, 0);
-//            //PendingIntent pendingIntent = PendingIntent.getActivity(MainActivity.this, 0,intent, 0);
-//            AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-//            am.set(AlarmManager.RTC_WAKEUP, cal.getTimeInMillis(), pendingIntent);
-//            AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-//           // cal.set(Calendar.AM_PM, Calendar.PM);
-//            Log.e("add alarm","alarm set");
-//            Intent myIntent = new Intent(this, Alarm.class);
-//            PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, myIntent,0);
-//            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, cal.getTimeInMillis(), pendingIntent);
-        }
-    }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {

@@ -46,6 +46,17 @@
             android:enabled="true"
             android:exported="true" />
 
+        <receiver
+            android:name=".LocationRestarterBroadcastReceiver"
+            android:enabled="true"
+            android:exported="true"
+            android:label="RestartLocationServiceWhenStopped"
+            >
+            <intent-filter>
+                <action android:name="LocationServiceRestart"/>
+            </intent-filter>
+
+        </receiver>
     </application>
 
 </manifest>
