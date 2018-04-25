@@ -9,6 +9,7 @@ import android.app.PendingIntent;
 import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
@@ -21,6 +22,7 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 
 import android.os.Bundle;
+import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -30,9 +32,12 @@ import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 
-public class AddAlarm extends AppCompatActivity  {
+public class AddAlarm extends AppCompatActivity implements TimeDistanceCalculation.TaskCompleted {
     TextView btnDate, datetext, btnTime, timetext, destination_text;
     private Calendar calendar;
     EditText reminder_title;
@@ -44,6 +49,7 @@ public class AddAlarm extends AppCompatActivity  {
     final static int req1 = 1;
     double latitude;
     double longitude;
+
     String Address;
     public String a = "0";
     int day, year, month, mHour, mMinute;
@@ -69,6 +75,13 @@ public class AddAlarm extends AppCompatActivity  {
         month = calendar.get(Calendar.MONTH);
         day = calendar.get(Calendar.DAY_OF_MONTH);
         showDate(year, month + 1, day);
+        Bundle b = getIntent().getExtras();
+        if(b!=null){
+            reminder_title.setText(b.getString("title"));
+            datetext.setText(b.getString("date"));
+            timetext.setText(b.getString("time"));
+            destination_text.setText(b.getString("address"));
+        }
     }
 
     //date picker dialog
@@ -101,10 +114,16 @@ public class AddAlarm extends AppCompatActivity  {
     private void showDate(int year, int month, int day) {
         mdate = new StringBuilder().append(day).append("/")
                 .append(month).append("/").append(year);
-        cal.set(Calendar.DATE, day);  //1-31
-        cal.set(Calendar.MONTH, month);  //first month is 0!!! January is zero!!!
-        cal.set(Calendar.YEAR, year);
-        datetext.setText(mdate);
+//        if(year>=cal.get(Calendar.DATE) && month>=cal.get(Calendar.MONTH) && day>=cal.get(Calendar.YEAR)) {
+//            cal.set(Calendar.DATE, day);  //1-31
+//            cal.set(Calendar.MONTH, month);  //first month is 0!!! January is zero!!!
+//            cal.set(Calendar.YEAR, year);
+
+            datetext.setText(mdate);
+//        }
+//        else{
+//            Toast.makeText(AddAlarm.this, " Select valid date", Toast.LENGTH_SHORT).show();
+//        }
     }
 
     //time picker dialog
@@ -124,16 +143,22 @@ public class AddAlarm extends AppCompatActivity  {
                     public void onTimeSet(TimePicker view, int hourOfDay,
                                           int minute) {
                         String am_pm = "";
-                        Calendar datetime = Calendar.getInstance();
-                        datetime.set(Calendar.HOUR_OF_DAY, hourOfDay);
-                        datetime.set(Calendar.MINUTE, minute);
-                        if (datetime.get(Calendar.AM_PM) == Calendar.AM)
+                        calendar = Calendar.getInstance();
+                        calendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
+                        calendar.set(Calendar.MINUTE, minute);
+                        if (calendar.get(Calendar.AM_PM) == Calendar.AM)
                             am_pm = "AM";
-                        else if (datetime.get(Calendar.AM_PM) == Calendar.PM)
+                        else if (calendar.get(Calendar.AM_PM) == Calendar.PM)
                             am_pm = "PM";
-                        String strHrsToShow = (datetime.get(Calendar.HOUR) == 0) ? "12" : datetime.get(Calendar.HOUR) + "";
-                        mtime = strHrsToShow + ":" + datetime.get(Calendar.MINUTE) + " " + am_pm;
-                        (timetext).setText(mtime);
+                        String strHrsToShow = (calendar.get(Calendar.HOUR) == 0) ? "12" : calendar.get(Calendar.HOUR) + "";
+                        mtime = strHrsToShow + ":" + calendar.get(Calendar.MINUTE) + " " + am_pm;
+                     //   if(calendar.getTimeInMillis() > calendar.getTimeInMillis() ){
+                            (timetext).setText(mtime);
+
+//                        }
+//                        else{
+//                            Toast.makeText(AddAlarm.this, " Select valid time", Toast.LENGTH_SHORT).show();
+//                        }
                     }
                 }, mHour, mMinute, false);
         timePickerDialog.show();
@@ -172,17 +197,34 @@ public class AddAlarm extends AppCompatActivity  {
         if (reminder_title != null) {
                 String title = reminder_title.getText().toString();
                 String date = datetext.getText().toString();
-                String time = mtime;
-                Alarms alarms = new Alarms(title, date, time, latitude, longitude, Address);
+                String time = timetext.getText().toString();
+                String address = destination_text.getText().toString();
 
-            AlarmsDBHandler handler = new AlarmsDBHandler(this);
+                Timestamp timestamp = null;
+                long timestamp_dummy = 0;
+                try {
+                   // SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy hh:mm");
+                   // Date parsedDate = dateFormat.parse(date + " "+ time);
+                    //timestamp = new java.sql.Timestamp(parsedDate.getTime());
+                    timestamp_dummy =  calendar.getTimeInMillis();
+                    Log.d(TAG, "TImestamp"+ calendar.getTimeInMillis());
+                } catch(Exception e) {
+                }
+                Alarms alarms = new Alarms(title, date, time, latitude, longitude, address, timestamp_dummy);
 
-            handler.addAlarm(alarms);
+                AlarmsDBHandler handler = new AlarmsDBHandler(this);
+                Alarms previous_alarm = handler.findPreviousAlarm(alarms);
+                long previous_timestamp = previous_alarm.getMtimestamp();
+                long actual_time_seconds = Math.abs(previous_timestamp-timestamp_dummy);
 
-            Toast.makeText(this, date + time +title + latitude+ longitude + Address+" Alarm added in database", Toast.LENGTH_SHORT).show();
-            Intent resultIntent = new Intent();
-            setResult(Activity.RESULT_OK, resultIntent);
-            finish();
+                Log.d(TAG," previous alarm fetched"+ actual_time_seconds);
+                ValidateTime(previous_alarm);
+                handler.addAlarm(alarms);
+
+                Toast.makeText(this, date + time +title + latitude+ longitude + Address+" Alarm added in database", Toast.LENGTH_SHORT).show();
+                Intent resultIntent = new Intent();
+                setResult(Activity.RESULT_OK, resultIntent);
+                finish();
 
 //            // Create a new PendingIntent and add it to the AlarmManager
 //            PendingIntent pendingIntent = PendingIntent.getService(this, 0,intent, 0);
@@ -211,7 +253,39 @@ public class AddAlarm extends AppCompatActivity  {
                 }
             }
     }
+
+    public void ValidateTime(Alarms alarms){
+        double source_lat = alarms.getMlatitude();
+        double source_long = alarms.getMlongitude();
+        String str_origin = "origin=" + source_lat + "," + source_long;
+
+        // Destination of route
+        String str_dest = "destination=" + latitude + "," + longitude;
+
+
+        // Sensor enabled
+        String sensor = "sensor=false";
+        // Travelling mode enable
+        String mode = "mode=driving";
+
+        // Building the parameters to the web service
+        String parameters = str_origin + "&" + str_dest + "&" + sensor + "&"+ mode;
+
+        // Output format
+        String output = "json";
+        String url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + parameters;
+        System.out.println("url :: " + url);
+        String response = new String();
+        new TimeDistanceCalculation(AddAlarm.this).execute(url);
+
+    }
+    @Override
+    public void onTaskComplete(Long result) {
+
+        Toast.makeText(this,"The result is " + Long.toString(result),Toast.LENGTH_LONG).show();
+        Log.e(TAG, "Seconds"+ result );
+
+    }
+
 }
-
-
 

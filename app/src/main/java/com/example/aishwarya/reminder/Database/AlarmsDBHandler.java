@@ -8,6 +8,8 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 import com.example.aishwarya.reminder.Alarm;
 
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,7 +30,7 @@ public class AlarmsDBHandler extends SQLiteOpenHelper {
     private static final String COLUMN_LATITUDE = "alarm_latitude";
     private static final String COLUMN_LONGITUDE = "alarm_longitude";
     private static final String COLUMN_ADDRESS = "alarm_address";
-
+    private static final String COLUMN_TIMESTAMP = "alarm_timestamp";
 
 
     public AlarmsDBHandler(Context context) {
@@ -46,7 +48,8 @@ public class AlarmsDBHandler extends SQLiteOpenHelper {
                 COLUMN_TIME + " TEXT, "+
                 COLUMN_LATITUDE+ " TEXT, "+
                 COLUMN_LONGITUDE+ " TEXT, "+
-                COLUMN_ADDRESS+ " TEXT)";
+                COLUMN_ADDRESS+ " TEXT, " +
+                COLUMN_TIMESTAMP+ " LONG)";
 
         db.execSQL(CREATE_ALARM_TABLE);
 
@@ -59,23 +62,69 @@ public class AlarmsDBHandler extends SQLiteOpenHelper {
         onCreate(db);
     }
 
+    private boolean isRecordExistInDatabase(String title, String date, String time, String address) {
+        String query = "SELECT * FROM " + TABLE_ALARMS + " WHERE " + COLUMN_TITLE + " = '" + title + "'" + " AND "
+                + COLUMN_DATE + " = '" + date + "'" + " AND "
+                + COLUMN_TIME + " = '" + time + "'" + " AND "
+                + COLUMN_ADDRESS + " =  '" + address + "'";
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor c = db.rawQuery(query, null);
+        if (c.moveToFirst()) {
+            //Record exist
+            c.close();
+            return true;
+        }
+        //Record available
+        c.close();
+        return false;
+    }
+
     public void addAlarm(Alarms alarm){
 
-        ContentValues values = new ContentValues();
-        values.put(COLUMN_TITLE,alarm.getMtitle());
-        values.put(COLUMN_DATE,alarm.getMdate());
-        values.put(COLUMN_TIME,alarm.getMtime());
-        values.put(COLUMN_LATITUDE,alarm.getMlatitude());
-        values.put(COLUMN_LONGITUDE,alarm.getMlongitude());
-        values.put(COLUMN_ADDRESS,alarm.getMaddress());
+        if(!isRecordExistInDatabase(alarm.getMtitle(), alarm.getMdate(), alarm.getMtime(), alarm.getMaddress())) {
+
+            ContentValues values = new ContentValues();
+            values.put(COLUMN_TITLE, alarm.getMtitle());
+            values.put(COLUMN_DATE, alarm.getMdate());
+            values.put(COLUMN_TIME, alarm.getMtime());
+            values.put(COLUMN_LATITUDE, alarm.getMlatitude());
+            values.put(COLUMN_LONGITUDE, alarm.getMlongitude());
+            values.put(COLUMN_ADDRESS, alarm.getMaddress());
+            values.put(COLUMN_TIMESTAMP, (alarm.getMtimestamp()));
+
+            SQLiteDatabase db = this.getWritableDatabase();
+
+            db.insert(TABLE_ALARMS, null, values);
+
+            db.close();
+        }
+    }
+
+    public Alarms findPreviousAlarm(Alarms alarms){
+
+        String sqlQuery = "SELECT * FROM " +" ( SELECT * FROM " + TABLE_ALARMS + " ORDER BY " +COLUMN_TIMESTAMP + " DESC ) " +" WHERE (" + COLUMN_TIMESTAMP +" < " + alarms.getMtimestamp() + ") LIMIT 1" ;
+
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor myCursor = db.rawQuery(sqlQuery, null);
+
+        Alarms alarm=null;
 
 
-        SQLiteDatabase db = this.getWritableDatabase();
+        if(myCursor.moveToFirst()) {
+            String title = myCursor.getString(1);
+            String date = myCursor.getString(2);
+            String time = myCursor.getString(3);
+            Double latitude = myCursor.getDouble(4);
+            Double longitude = myCursor.getDouble(5);
+            String address = myCursor.getString(6);
+            long timestmp = (myCursor.getLong(7));
 
-        db.insert(TABLE_ALARMS, null, values);
-
+            alarm = new Alarms(title,date,time,latitude,longitude,address,timestmp);
+        }
         db.close();
-
+        return alarm;
     }
 
     public List<Alarms> findAll(){
@@ -96,8 +145,9 @@ public class AlarmsDBHandler extends SQLiteOpenHelper {
                 Double latitude = myCursor.getDouble(4);
                 Double longitude = myCursor.getDouble(5);
                 String address = myCursor.getString(6);
+                long timestmp = (myCursor.getLong(7));
 
-                alarm = new Alarms(title,date,time,latitude,longitude,address);
+                alarm = new Alarms(title,date,time,latitude,longitude,address,timestmp);
                 AllAlarms.add(alarm);
                 myCursor.moveToNext();
             }

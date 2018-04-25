@@ -74,7 +74,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     private static final LatLngBounds LAT_LNG_BOUNDS = new LatLngBounds(
             new LatLng(-40,-168), new LatLng(71,136));
     private static final int PLACE_PICKER_REQUEST = 1;
-
+    private static Location currentLocation = null;
     //vars
     private Boolean mLocationPermissionsGranted = false;
     private GoogleMap mMap;
@@ -172,6 +172,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                     resultIntent.putExtra("lat", (mPlace.getLatlng().latitude));
                     resultIntent.putExtra("long", mPlace.getLatlng().longitude);
                     resultIntent.putExtra("address", mPlace.getAddress());
+
                     setResult(Activity.RESULT_OK, resultIntent);
                     finish();
                 }
@@ -241,7 +242,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                     public void onComplete(@NonNull Task task) {
                         if (task.isSuccessful()) {
                             Log.d(TAG, "onComplete: found location!");
-                            Location currentLocation = (Location) task.getResult();
+                            currentLocation = (Location) task.getResult();
                             moveCamera(new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude()), DEFAULT_ZOOM,"My Location");
 
                         } else {

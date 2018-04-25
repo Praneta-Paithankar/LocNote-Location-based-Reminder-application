@@ -40,6 +40,12 @@
 
         <activity android:name=".AddAlarm" />
         <activity android:name=".Maps.MapActivity" />
+
+        <service
+            android:name=".LocationService"
+            android:enabled="true"
+            android:exported="true" />
+
     </application>
 
 </manifest>

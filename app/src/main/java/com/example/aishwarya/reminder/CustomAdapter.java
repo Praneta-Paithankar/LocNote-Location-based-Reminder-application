@@ -5,6 +5,7 @@ package com.example.aishwarya.reminder;
  */
 
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -68,6 +69,11 @@ public class CustomAdapter extends BaseAdapter{
             public void onClick(View v) {
                 // TODO Auto-generated method stub
                 Toast.makeText(context, "You Clicked "+ result.get(position), Toast.LENGTH_LONG).show();
+               // Intent intent = new Intent(this, AddAlarm.class);
+              //  startActivityForResult(intent, 1);
+            }
+
+            private void startActivityForResult(Intent intent, int i) {
             }
         });
         return rowView;
