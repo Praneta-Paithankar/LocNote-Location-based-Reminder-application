@@ -36,27 +36,26 @@ import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.ExecutionException;
 
 public class AddAlarm extends AppCompatActivity implements TimeDistanceCalculation.TaskCompleted {
     TextView btnDate, datetext, btnTime, timetext, destination_text;
     private Calendar calendar;
     EditText reminder_title;
-    Bundle bundle;
     FloatingActionButton addalarm;
     String mtime;
     StringBuilder mdate;
     Calendar cal;
-    final static int req1 = 1;
     double latitude;
     double longitude;
-    long selected_timestamp = 0;
     String Address;
-    public String a = "0";
     int day, year, month, mHour, mMinute;
     private static final String TAG = "MainActivity";
-    String current_date;
     private static final int ERROR_DIALOG_REQUEST = 9001;
 
     @Override
@@ -72,11 +71,12 @@ public class AddAlarm extends AppCompatActivity implements TimeDistanceCalculati
         destination_text = (TextView) findViewById(R.id.repeat_no_text);
 
         calendar = Calendar.getInstance();
+        cal = Calendar.getInstance();
+
         year = calendar.get(Calendar.YEAR);
-      //  cal = Calendar.getInstance();
         month = calendar.get(Calendar.MONTH);
         day = calendar.get(Calendar.DAY_OF_MONTH);
-        current_date = String.valueOf(showDate(year, month + 1, day));
+
         Bundle b = getIntent().getExtras();
         if(b!=null){
             reminder_title.setText(b.getString("title"));
@@ -119,7 +119,7 @@ public class AddAlarm extends AppCompatActivity implements TimeDistanceCalculati
         mdate = new StringBuilder().append(day).append("-")
                 .append(month).append("-").append(year);
             calendar.set(Calendar.DATE, day);  //1-31
-            calendar.set(Calendar.MONTH, month);  //first month is 0!!! January is zero!!!
+            calendar.set(Calendar.MONTH, month-1);  //first month is 0!!! January is zero!!!
             calendar.set(Calendar.YEAR, year);
 
             datetext.setText(mdate);
@@ -132,11 +132,9 @@ public class AddAlarm extends AppCompatActivity implements TimeDistanceCalculati
         final Calendar c = Calendar.getInstance();
         mHour = c.get(Calendar.HOUR_OF_DAY);
         mMinute = c.get(Calendar.MINUTE);
-//        cal.set(Calendar.HOUR_OF_DAY, mHour);  //HOUR
-//        cal.set(Calendar.MINUTE, mMinute);
-//        cal.set(Calendar.SECOND, 0);
-
-
+        cal.set(Calendar.HOUR_OF_DAY, mHour);  //HOUR
+        cal.set(Calendar.MINUTE, mMinute);
+        cal.set(Calendar.SECOND, 0);
 
         // Launch Time Picker Dialog
        TimePickerDialog timePickerDialog = new TimePickerDialog(this,
@@ -146,7 +144,7 @@ public class AddAlarm extends AppCompatActivity implements TimeDistanceCalculati
                     public void onTimeSet(TimePicker view, int hourOfDay,
                                           int minute) {
                         String am_pm = "";
-                        calendar = Calendar.getInstance();
+
                         calendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
                         calendar.set(Calendar.MINUTE, minute);
                         if (calendar.get(Calendar.AM_PM) == Calendar.AM)
@@ -154,12 +152,9 @@ public class AddAlarm extends AppCompatActivity implements TimeDistanceCalculati
                         else if (calendar.get(Calendar.AM_PM) == Calendar.PM)
                             am_pm = "PM";
                         String strHrsToShow = (calendar.get(Calendar.HOUR) == 0) ? "12" : calendar.get(Calendar.HOUR) + "";
-                        mtime = strHrsToShow + ":" + calendar.get(Calendar.MINUTE) + " " + am_pm;
+                        mtime = String.format("%s:%02d %s",strHrsToShow,calendar.get(Calendar.MINUTE), am_pm);
 
-                        Long k  = (calendar.getTimeInMillis());
-                        Long s = System.currentTimeMillis();
-                        long  l = s-k;
-                        if( (calendar.getTimeInMillis()-System.currentTimeMillis())<=0)
+                        if((calendar.getTime().getTime()< System.currentTimeMillis()))
                         {
                             Toast.makeText(AddAlarm.this, " Please add valid time", Toast.LENGTH_SHORT).show();
                             timetext.setText("");
@@ -182,33 +177,48 @@ public class AddAlarm extends AppCompatActivity implements TimeDistanceCalculati
 
     //add reminder button
     @RequiresApi(api = Build.VERSION_CODES.M)
-    public void onClickAddReminder(View v) {
+    public void onClickAddReminder(View v) throws ParseException, ExecutionException, InterruptedException {
 
         if (reminder_title != null) {
             String title = reminder_title.getText().toString();
             String date = datetext.getText().toString();
             String time = timetext.getText().toString();
             String address = destination_text.getText().toString();
+            long timestamp_dummy = 0;
             try {
-                Log.d(TAG, "Timestamp"+ calendar.getTimeInMillis());
-            } catch(Exception e) {
+
+                timestamp_dummy = calendar.getTimeInMillis();
+                Log.d(TAG, "TImestamp" + calendar.getTimeInMillis());
+            } catch (Exception e) {
             }
-            Alarms alarms = new Alarms(title, date, time, latitude, longitude, address, selected_timestamp);
+            Alarms alarms = new Alarms(title, date, time, latitude, longitude, address, timestamp_dummy);
 
             AlarmsDBHandler handler = new AlarmsDBHandler(this);
-          //  Alarms previous_alarm = handler.findPreviousAlarm(alarms);
-          //  long previous_timestamp = previous_alarm.getMtimestamp();
-          //  long actual_time_seconds = Math.abs(previous_timestamp-selected_timestamp);
-         //   Log.d(TAG," previous alarm fetched"+ actual_time_seconds);
-          //  ValidateTime(previous_alarm);
-            handler.addAlarm(alarms);
+            Alarms previous_alarm = handler.findPreviousAlarm(alarms);
+            if(previous_alarm!=null ) {
+                long previous_timestamp = previous_alarm.getMtimestamp();
+                long actual_time_seconds = Math.abs(previous_timestamp - timestamp_dummy);
 
-            Toast.makeText(this, date + time +title + latitude+ longitude + Address+" Alarm added in database", Toast.LENGTH_SHORT).show();
+                Log.d(TAG, " previous alarm fetched" + (actual_time_seconds/1000.0));
+                long fetched_time1 = ValidateTime(previous_alarm);
+                Log.d(TAG, " actual alarm fetched" + fetched_time1);
+                Log.d(TAG, " Difference" + (fetched_time1-(actual_time_seconds/1000.0)));
+                if(((actual_time_seconds/1000.0)-fetched_time1)<=0){
+                    Toast.makeText(this, "Selected Alarm clashes with previous set Alarm",Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+
+            }
+            else{
+            handler.addAlarm(alarms);}
+            Toast.makeText(this, date + time + title + latitude + longitude + Address + " Alarm added in database", Toast.LENGTH_SHORT).show();
             Intent resultIntent = new Intent();
             setResult(Activity.RESULT_OK, resultIntent);
             finish();
         }
     }
+
 
 
     public boolean isServicesOK() {
@@ -244,7 +254,7 @@ public class AddAlarm extends AppCompatActivity implements TimeDistanceCalculati
             }
     }
 
-    public void ValidateTime(Alarms alarms){
+    public long ValidateTime(Alarms alarms) throws ExecutionException, InterruptedException {
         double source_lat = alarms.getMlatitude();
         double source_long = alarms.getMlongitude();
         String str_origin = "origin=" + source_lat + "," + source_long;
@@ -266,7 +276,8 @@ public class AddAlarm extends AppCompatActivity implements TimeDistanceCalculati
         String url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + parameters;
         System.out.println("url :: " + url);
         String response = new String();
-        new TimeDistanceCalculation(AddAlarm.this).execute(url);
+        long result1 = new TimeDistanceCalculation(AddAlarm.this).execute(url).get();
+        return result1;
 
     }
     @Override
@@ -274,7 +285,6 @@ public class AddAlarm extends AppCompatActivity implements TimeDistanceCalculati
 
         Toast.makeText(this,"The result is " + Long.toString(result),Toast.LENGTH_LONG).show();
         Log.e(TAG, "Seconds"+ result );
-
     }
 
 }

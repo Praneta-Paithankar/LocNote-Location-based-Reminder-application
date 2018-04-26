@@ -6,11 +6,13 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-import com.example.aishwarya.reminder.Alarm;
 
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -102,29 +104,34 @@ public class AlarmsDBHandler extends SQLiteOpenHelper {
     }
 
     public Alarms findPreviousAlarm(Alarms alarms){
-
-        String sqlQuery = "SELECT * FROM " +" ( SELECT * FROM " + TABLE_ALARMS + " ORDER BY " +COLUMN_TIMESTAMP + " DESC ) " +" WHERE (" + COLUMN_TIMESTAMP +" < " + alarms.getMtimestamp() + ") LIMIT 1" ;
-
+        String countQuery = "SELECT  * FROM " + TABLE_ALARMS;
         SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(countQuery, null);
+        int count = cursor.getCount();
+        cursor.close();
 
-        Cursor myCursor = db.rawQuery(sqlQuery, null);
+        if(count > 1) {
+            String sqlQuery = "SELECT * FROM " + " ( SELECT * FROM " + TABLE_ALARMS + " ORDER BY " + COLUMN_TIMESTAMP + " DESC ) " + " WHERE (" + COLUMN_TIMESTAMP + " < " + alarms.getMtimestamp() + ") LIMIT 1";
 
-        Alarms alarm=null;
 
+            Cursor myCursor = db.rawQuery(sqlQuery, null);
+            Alarms alarm = null;
+            if (myCursor.moveToFirst()) {
+                String title = myCursor.getString(1);
+                String date = myCursor.getString(2);
+                String time = myCursor.getString(3);
+                Double latitude = myCursor.getDouble(4);
+                Double longitude = myCursor.getDouble(5);
+                String address = myCursor.getString(6);
+                long timestmp = (myCursor.getLong(7));
 
-        if(myCursor.moveToFirst()) {
-            String title = myCursor.getString(1);
-            String date = myCursor.getString(2);
-            String time = myCursor.getString(3);
-            Double latitude = myCursor.getDouble(4);
-            Double longitude = myCursor.getDouble(5);
-            String address = myCursor.getString(6);
-            long timestmp = (myCursor.getLong(7));
-
-            alarm = new Alarms(title,date,time,latitude,longitude,address,timestmp);
+                alarm = new Alarms(title, date, time, latitude, longitude, address, timestmp);
+            }
+            myCursor.close();
+            db.close();
+            return alarm;
         }
-        db.close();
-        return alarm;
+        return null;
     }
 
     public List<Alarms> findAll(){
@@ -152,6 +159,7 @@ public class AlarmsDBHandler extends SQLiteOpenHelper {
                 myCursor.moveToNext();
             }
         }
+        myCursor.close();
         db.close();
         return AllAlarms;
     }
