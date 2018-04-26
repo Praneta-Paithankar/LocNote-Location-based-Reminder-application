@@ -93,6 +93,7 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
             public void onLocationResult(LocationResult locationResult) {
                 super.onLocationResult(locationResult);
                 Location location = locationResult.getLastLocation();
+
                 latitude=String.valueOf(location.getLatitude());
                 longitude=String.valueOf(location.getLongitude());
                 mBuilder.setContentText("Current Location is"+ latitude+" " + longitude);

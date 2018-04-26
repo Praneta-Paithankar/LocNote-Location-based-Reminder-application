@@ -14,6 +14,7 @@ import java.util.Calendar;
 
 public class testTimestamp {
 
+    static int flag = 0;
     public static void main(String args[]) throws ParseException {
 
 
@@ -29,7 +30,7 @@ public class testTimestamp {
         Calendar cal = Calendar.getInstance();
         SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
         String test = sdf.format(cal.getTime());
-
+        flag = 1;
         SimpleDateFormat format = new SimpleDateFormat("hh:mm");
 
 
@@ -48,7 +49,7 @@ public class testTimestamp {
         System.out.println("String date "+(calendar.getTime().getTime()));
 
         Long t1 = calendar.getTime().getTime() - cal.getTime().getTime();
-        System.out.println("String date "+(t1));
+        System.out.println("String date "+(flag));
 //
 //        DateFormat simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
 //

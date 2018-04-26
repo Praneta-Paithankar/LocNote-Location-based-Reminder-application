@@ -54,6 +54,8 @@ public class AddAlarm extends AppCompatActivity implements TimeDistanceCalculati
     double latitude;
     double longitude;
     String Address;
+    int flag = 0;
+    int id = 0;
     int day, year, month, mHour, mMinute;
     private static final String TAG = "MainActivity";
     private static final int ERROR_DIALOG_REQUEST = 9001;
@@ -83,6 +85,9 @@ public class AddAlarm extends AppCompatActivity implements TimeDistanceCalculati
             datetext.setText(b.getString("date"));
             timetext.setText(b.getString("time"));
             destination_text.setText(b.getString("address"));
+            flag = b.getInt("flag");
+            id = b.getInt("id");
+
         }
     }
 
@@ -188,34 +193,77 @@ public class AddAlarm extends AppCompatActivity implements TimeDistanceCalculati
             try {
 
                 timestamp_dummy = calendar.getTimeInMillis();
-                Log.d(TAG, "TImestamp" + calendar.getTimeInMillis());
+                Log.d(TAG, "Timestamp" + calendar.getTimeInMillis());
             } catch (Exception e) {
             }
             Alarms alarms = new Alarms(title, date, time, latitude, longitude, address, timestamp_dummy);
 
             AlarmsDBHandler handler = new AlarmsDBHandler(this);
             Alarms previous_alarm = handler.findPreviousAlarm(alarms);
+            Alarms next_alarm = handler.findNextAlarm(alarms);
             if(previous_alarm!=null ) {
                 long previous_timestamp = previous_alarm.getMtimestamp();
                 long actual_time_seconds = Math.abs(previous_timestamp - timestamp_dummy);
 
-                Log.d(TAG, " previous alarm fetched" + (actual_time_seconds/1000.0));
+              //  Log.d(TAG, " previous alarm fetched" + (actual_time_seconds/1000.0));
                 long fetched_time1 = ValidateTime(previous_alarm);
-                Log.d(TAG, " actual alarm fetched" + fetched_time1);
-                Log.d(TAG, " Difference" + (fetched_time1-(actual_time_seconds/1000.0)));
+             //   Log.d(TAG, " actual alarm fetched" + fetched_time1);
+             //   Log.d(TAG, " Difference" + (fetched_time1-(actual_time_seconds/1000.0)));
                 if(((actual_time_seconds/1000.0)-fetched_time1)<=0){
                     Toast.makeText(this, "Selected Alarm clashes with previous set Alarm",Toast.LENGTH_SHORT).show();
                     return;
                 }
+                else{
+                    if(flag==1){
+                        handler.updateAlarm(alarms,id);
+                    }
+                    else {
+                        handler.addAlarm(alarms);
+                    }
+                    Toast.makeText(this, date + time + title + latitude + longitude + Address + " Alarm added in database", Toast.LENGTH_SHORT).show();
+                    Intent resultIntent = new Intent();
+                    setResult(Activity.RESULT_OK, resultIntent);
+                    finish();
 
+                }
 
             }
-            else{
-            handler.addAlarm(alarms);}
-            Toast.makeText(this, date + time + title + latitude + longitude + Address + " Alarm added in database", Toast.LENGTH_SHORT).show();
-            Intent resultIntent = new Intent();
-            setResult(Activity.RESULT_OK, resultIntent);
-            finish();
+            if(next_alarm!=null){
+                long next_timestamp = previous_alarm.getMtimestamp();
+                long actual_time_seconds = Math.abs(next_timestamp - timestamp_dummy);
+
+                Log.d(TAG, " next alarm fetched" + (actual_time_seconds/1000.0));
+                long fetched_time12 = ValidateTime(alarms);
+                Log.d(TAG, " actual alarm fetched" + fetched_time12);
+                Log.d(TAG, " Difference" + (fetched_time12-(actual_time_seconds/1000.0)));
+                if(((actual_time_seconds/1000.0)-fetched_time12)<=0){
+                    Toast.makeText(this, "Selected Alarm clashes with next set Alarm",Toast.LENGTH_SHORT).show();
+                }
+                else{
+                    if(flag==1){
+                        handler.updateAlarm(alarms,id);
+                    }
+                    else {
+                        handler.addAlarm(alarms);
+                    }
+                    Toast.makeText(this, date + time + title + latitude + longitude + Address + " Alarm added in database", Toast.LENGTH_SHORT).show();
+                    Intent resultIntent = new Intent();
+                    setResult(Activity.RESULT_OK, resultIntent);
+                    finish();
+                }
+            }
+            else {
+                if(flag==1){
+                    handler.updateAlarm(alarms,id);
+                }
+                else {
+                    handler.addAlarm(alarms);
+                }
+                Toast.makeText(this, date + time + title + latitude + longitude + Address + " Alarm added in database", Toast.LENGTH_SHORT).show();
+                Intent resultIntent = new Intent();
+                setResult(Activity.RESULT_OK, resultIntent);
+                finish();
+            }
         }
     }
 

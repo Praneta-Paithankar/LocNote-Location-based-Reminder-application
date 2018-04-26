@@ -14,17 +14,20 @@ public class Alarms {
     private double mlongitude;
     private String maddress;
     private long mtimestamp;
+    private int mid;
 
-    public Alarms(String title, String date, String time, double latitude, double longitude, String address){
+    public Alarms(int id, String title, String date, String time, double latitude, double longitude, String address, long timestamp_dummy){
+        mid = id;
         mtitle = title;
         mdate = date;
         mtime = time ;
         mlatitude = latitude;
         mlongitude = longitude;
         maddress = address;
+        mtimestamp = timestamp_dummy;
     }
 
-    public Alarms(String title, String date, String time, double latitude, double longitude, String address, long timestamp_dummy){
+    public Alarms( String title, String date, String time, double latitude, double longitude, String address, long timestamp_dummy){
         mtitle = title;
         mdate = date;
         mtime = time ;
@@ -88,5 +91,13 @@ public class Alarms {
 
     public void setMtimestamp(long mtimestamp) {
         this.mtimestamp = mtimestamp;
+    }
+
+    public int getMid() {
+        return mid;
+    }
+
+    public void setMid(int mid) {
+        this.mid = mid;
     }
 }

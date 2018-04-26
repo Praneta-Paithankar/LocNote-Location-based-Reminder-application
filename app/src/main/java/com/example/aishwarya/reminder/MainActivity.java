@@ -30,6 +30,7 @@ public class MainActivity extends AppCompatActivity {
     ArrayList<String> item_alarm;
     CustomAdapter customAdapter;
     private static LayoutInflater inflater=null;
+    int flag = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -145,10 +146,13 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(context, "You Clicked "+ result.get(position), Toast.LENGTH_LONG).show();
                     Bundle bundle = new Bundle();
                     Intent intent = new Intent(MainActivity.this, AddAlarm.class);
+                    bundle.putInt("id",AllAlarms.get(position).getMid());
                     bundle.putString("title", AllAlarms.get(position).getMtitle());
                     bundle.putString("date", AllAlarms.get(position).getMdate());
                     bundle.putString("time", AllAlarms.get(position).getMtime());
                     bundle.putString("address", AllAlarms.get(position).getMaddress());
+                    flag = 1;
+                    bundle.putInt("flag",flag);
                     intent.putExtras(bundle);
                     startActivityForResult(intent, 1);
                 }
