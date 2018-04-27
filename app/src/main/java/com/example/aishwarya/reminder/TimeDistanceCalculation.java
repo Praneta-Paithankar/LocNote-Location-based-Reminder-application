@@ -35,7 +35,7 @@ public class TimeDistanceCalculation extends AsyncTask<String, Integer, Long>  {
 
     public interface TaskCompleted {
         // Define data you like to return from AysncTask
-        public void onTaskComplete(Long result);
+        void onTaskComplete(Long result);
     }
     protected Long doInBackground(String... urls) {
         //System.out.print("inside doInBackground function!");

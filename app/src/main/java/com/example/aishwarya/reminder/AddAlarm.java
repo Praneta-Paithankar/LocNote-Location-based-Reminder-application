@@ -200,15 +200,15 @@ public class AddAlarm extends AppCompatActivity implements TimeDistanceCalculati
 
             AlarmsDBHandler handler = new AlarmsDBHandler(this);
             Alarms previous_alarm = handler.findPreviousAlarm(alarms);
-            Alarms next_alarm = handler.findNextAlarm(alarms);
+           // Alarms next_alarm = handler.findNextAlarm(alarms);
             if(previous_alarm!=null ) {
                 long previous_timestamp = previous_alarm.getMtimestamp();
                 long actual_time_seconds = Math.abs(previous_timestamp - timestamp_dummy);
 
-              //  Log.d(TAG, " previous alarm fetched" + (actual_time_seconds/1000.0));
+                Log.d(TAG, " previous alarm fetched" + (actual_time_seconds/1000.0));
                 long fetched_time1 = ValidateTime(previous_alarm);
-             //   Log.d(TAG, " actual alarm fetched" + fetched_time1);
-             //   Log.d(TAG, " Difference" + (fetched_time1-(actual_time_seconds/1000.0)));
+                Log.d(TAG, " actual alarm fetched" + fetched_time1);
+                Log.d(TAG, " Difference" + (fetched_time1-(actual_time_seconds/1000.0)));
                 if(((actual_time_seconds/1000.0)-fetched_time1)<=0){
                     Toast.makeText(this, "Selected Alarm clashes with previous set Alarm",Toast.LENGTH_SHORT).show();
                     return;
@@ -228,30 +228,30 @@ public class AddAlarm extends AppCompatActivity implements TimeDistanceCalculati
                 }
 
             }
-            if(next_alarm!=null){
-                long next_timestamp = previous_alarm.getMtimestamp();
-                long actual_time_seconds = Math.abs(next_timestamp - timestamp_dummy);
-
-                Log.d(TAG, " next alarm fetched" + (actual_time_seconds/1000.0));
-                long fetched_time12 = ValidateTime(alarms);
-                Log.d(TAG, " actual alarm fetched" + fetched_time12);
-                Log.d(TAG, " Difference" + (fetched_time12-(actual_time_seconds/1000.0)));
-                if(((actual_time_seconds/1000.0)-fetched_time12)<=0){
-                    Toast.makeText(this, "Selected Alarm clashes with next set Alarm",Toast.LENGTH_SHORT).show();
-                }
-                else{
-                    if(flag==1){
-                        handler.updateAlarm(alarms,id);
-                    }
-                    else {
-                        handler.addAlarm(alarms);
-                    }
-                    Toast.makeText(this, date + time + title + latitude + longitude + Address + " Alarm added in database", Toast.LENGTH_SHORT).show();
-                    Intent resultIntent = new Intent();
-                    setResult(Activity.RESULT_OK, resultIntent);
-                    finish();
-                }
-            }
+//            if(next_alarm!=null){
+//                long next_timestamp = previous_alarm.getMtimestamp();
+//                long actual_time_seconds = Math.abs(next_timestamp - timestamp_dummy);
+//
+//                Log.d(TAG, " next alarm fetched" + (actual_time_seconds/1000.0));
+//                long fetched_time12 = ValidateTime(alarms);
+//                Log.d(TAG, " actual alarm fetched" + fetched_time12);
+//                Log.d(TAG, " Difference" + (fetched_time12-(actual_time_seconds/1000.0)));
+//                if(((actual_time_seconds/1000.0)-fetched_time12)<=0){
+//                    Toast.makeText(this, "Selected Alarm clashes with next set Alarm",Toast.LENGTH_SHORT).show();
+//                }
+//                else{
+//                    if(flag==1){
+//                        handler.updateAlarm(alarms,id);
+//                    }
+//                    else {
+//                        handler.addAlarm(alarms);
+//                    }
+//                    Toast.makeText(this, date + time + title + latitude + longitude + Address + " Alarm added in database", Toast.LENGTH_SHORT).show();
+//                    Intent resultIntent = new Intent();
+//                    setResult(Activity.RESULT_OK, resultIntent);
+//                    finish();
+//                }
+//            }
             else {
                 if(flag==1){
                     handler.updateAlarm(alarms,id);
@@ -324,10 +324,11 @@ public class AddAlarm extends AppCompatActivity implements TimeDistanceCalculati
         String url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + parameters;
         System.out.println("url :: " + url);
         String response = new String();
-        long result1 = new TimeDistanceCalculation(AddAlarm.this).execute(url).get();
+        long result1 = new TimeDistanceCalculation(this).execute(url).get();
         return result1;
 
     }
+
     @Override
     public void onTaskComplete(Long result) {
 

@@ -156,7 +156,7 @@ public class AlarmsDBHandler extends SQLiteOpenHelper {
     }
 
 
-    public Alarms findNextAlarm(Alarms alarms){
+    public Alarms findNextLocAlarm(long current_time){
         String countQuery = "SELECT  * FROM " + TABLE_ALARMS;
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery(countQuery, null);
@@ -164,7 +164,7 @@ public class AlarmsDBHandler extends SQLiteOpenHelper {
         cursor.close();
 
         if(count > 1) {
-            String sqlQuery = "SELECT * FROM " + " ( SELECT * FROM " + TABLE_ALARMS + " ORDER BY " + COLUMN_TIMESTAMP + " ) " + " WHERE (" + COLUMN_TIMESTAMP + " > " + alarms.getMtimestamp() + ") LIMIT 1";
+            String sqlQuery = "SELECT * FROM " + " ( SELECT * FROM " + TABLE_ALARMS + " ORDER BY " + COLUMN_TIMESTAMP + " ) " + " WHERE (" + COLUMN_TIMESTAMP + " > " + current_time + ") LIMIT 1";
 
 
             Cursor myCursor = db.rawQuery(sqlQuery, null);
@@ -186,6 +186,37 @@ public class AlarmsDBHandler extends SQLiteOpenHelper {
         }
         return null;
     }
+
+//    public Alarms findNextAlarm(Alarms alarms){
+//        String countQuery = "SELECT  * FROM " + TABLE_ALARMS;
+//        SQLiteDatabase db = this.getReadableDatabase();
+//        Cursor cursor = db.rawQuery(countQuery, null);
+//        int count = cursor.getCount();
+//        cursor.close();
+//
+//        if(count > 1) {
+//            String sqlQuery = "SELECT * FROM " + " ( SELECT * FROM " + TABLE_ALARMS + " ORDER BY " + COLUMN_TIMESTAMP + " ) " + " WHERE (" + COLUMN_TIMESTAMP + " > " + alarms.getMtimestamp() + ") LIMIT 1";
+//
+//
+//            Cursor myCursor = db.rawQuery(sqlQuery, null);
+//            Alarms alarm = null;
+//            if (myCursor.moveToFirst()) {
+//                String title = myCursor.getString(1);
+//                String date = myCursor.getString(2);
+//                String time = myCursor.getString(3);
+//                Double latitude = myCursor.getDouble(4);
+//                Double longitude = myCursor.getDouble(5);
+//                String address = myCursor.getString(6);
+//                long timestmp = (myCursor.getLong(7));
+//
+//                alarm = new Alarms(title, date, time, latitude, longitude, address, timestmp);
+//            }
+//            myCursor.close();
+//            db.close();
+//            return alarm;
+//        }
+//        return null;
+//    }
 
     public List<Alarms> findAll(){
         String sqlQuery = "SELECT * FROM " + TABLE_ALARMS ;
