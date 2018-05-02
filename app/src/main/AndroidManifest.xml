@@ -33,13 +33,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <activity android:name=".AddAlarm" >
-        <intent-filter>
-            <action android:name="AddAlarm"/>
-        </intent-filter>
+        <activity android:name=".AddAlarm">
+            <intent-filter>
+                <action android:name="AddAlarm" />
+            </intent-filter>
         </activity>
-
         <activity android:name=".Maps.MapActivity" />
 
         <service
@@ -51,13 +49,12 @@
             android:name=".LocationRestarterBroadcastReceiver"
             android:enabled="true"
             android:exported="true"
-            android:label="RestartLocationServiceWhenStopped"
-            >
+            android:label="RestartLocationServiceWhenStopped">
             <intent-filter>
-                <action android:name="LocationServiceRestart"/>
+                <action android:name="LocationServiceRestart" />
             </intent-filter>
-
         </receiver>
+
     </application>
 
 </manifest>

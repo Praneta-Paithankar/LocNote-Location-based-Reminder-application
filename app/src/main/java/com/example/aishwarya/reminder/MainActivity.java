@@ -2,7 +2,9 @@ package com.example.aishwarya.reminder;
 
 import android.app.Activity;
 import android.app.ActivityManager;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -41,22 +43,21 @@ public class MainActivity extends AppCompatActivity {
         AlarmsDBHandler handler = new AlarmsDBHandler(this);
         AllAlarms = handler.findAll();
         item_alarm = new ArrayList<String>();
-        if(AllAlarms.size() != 0)
-        {
+        if(AllAlarms.size() != 0) {
             System.out.println(AllAlarms);
-            for(int i =0;i<AllAlarms.size();i++){
-                item_alarm.add("Title:"+AllAlarms.get(i).getMtitle() +
-                        "\n"+ "Date:"+AllAlarms.get(i).getMdate() +
-                        "\n"+ "Time:"+AllAlarms.get(i).getMtime()+
-                        "\n"+ "Address:"+AllAlarms.get(i).getMaddress() +
-                        "\n" + "Timestamp:" + AllAlarms.get(i).getMtimestamp()
+            for (int i = 0; i < AllAlarms.size(); i++) {
+                item_alarm.add("Title:\t" + AllAlarms.get(i).getMtitle() +
+                        "\n" + "Date:\t" + AllAlarms.get(i).getMdate() +
+                        "\n" + "Time:\t" + AllAlarms.get(i).getMtime() +
+                        "\n" + "Address:\t" + AllAlarms.get(i).getMaddress()
 
                 );
             }
+        }
 
             customAdapter = new CustomAdapter(this, item_alarm);
             lv.setAdapter(customAdapter);
-        }
+
 
 
     }
@@ -79,19 +80,19 @@ public class MainActivity extends AppCompatActivity {
                     System.out.println(AllAlarms);
                     // String title = AllAlarms.get(1).getMtitle();
                     for (int i = 0; i < AllAlarms.size(); i++) {
-                        item_alarm.add("Title:" + AllAlarms.get(i).getMtitle() +
-                                "\n" + "Date:" + AllAlarms.get(i).getMdate() +
-                                "\n" + "Time:" + AllAlarms.get(i).getMtime() +
-                                "\n" + "Address:" + AllAlarms.get(i).getMaddress() +
-                                "\n" + "Timestamp:" + AllAlarms.get(i).getMtimestamp()
+                        item_alarm.add("Title:\t" + AllAlarms.get(i).getMtitle() +
+                                "\n" + "Date:\t" + AllAlarms.get(i).getMdate() +
+                                "\n" + "Time:\t" + AllAlarms.get(i).getMtime() +
+                                "\n" + "Address:\t" + AllAlarms.get(i).getMaddress()
 
 
                         );
                     }
+                }
                     customAdapter = new CustomAdapter(this, item_alarm);
                     //customAdapter.notifyDataSetChanged();
                     lv.setAdapter(customAdapter);
-                }
+
             }
         }
     }
@@ -137,24 +138,70 @@ public class MainActivity extends AppCompatActivity {
             CustomAdapter.Holder holder=new CustomAdapter.Holder();
             View rowView;
             rowView = inflater.inflate(R.layout.item_main, null);
-            holder.tv=(TextView) rowView.findViewById(R.id.textView1);
+            holder.tv=(TextView) rowView.findViewById(R.id.textView);
             holder.tv.setText(result.get(position));
             rowView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    LayoutInflater li = LayoutInflater.from(context);
+                    final View vi = li.inflate(R.layout.alertbox_del_update, null);
+                    AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                    builder.setView(vi);
+                    builder.setCancelable(true);
+                    builder.setPositiveButton("Edit", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which){
+                            //I cannot get access to the marker in here
+                            Toast.makeText(context, "You Clicked "+ result.get(position), Toast.LENGTH_LONG).show();
+                            Bundle bundle = new Bundle();
+                            Intent intent = new Intent(MainActivity.this, AddAlarm.class);
+                            bundle.putInt("id",AllAlarms.get(position).getMid());
+                            bundle.putDouble("lat",AllAlarms.get(position).getMlatitude());
+                            bundle.putDouble("long",AllAlarms.get(position).getMlongitude());
+                            bundle.putLong("timestamp",AllAlarms.get(position).getMtimestamp());
+                            bundle.putString("title", AllAlarms.get(position).getMtitle());
+                            bundle.putString("date", AllAlarms.get(position).getMdate());
+                            bundle.putString("time", AllAlarms.get(position).getMtime());
+                            bundle.putString("address", AllAlarms.get(position).getMaddress());
+                            flag = 1;
+                            bundle.putInt("flag",flag);
+                            intent.putExtras(bundle);
+                            startActivityForResult(intent, 1);
+                        }});
+                    builder.setNegativeButton("Delete", new DialogInterface.OnClickListener() {
+
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int j) {
+                            AlarmsDBHandler handler = new AlarmsDBHandler(MainActivity.this);
+                            handler.deleteAlarm(AllAlarms.get(position));
+                            // item_alarm.remove(position);
+//                            customAdapter.notifyDataSetChanged();
+                            AlarmsDBHandler handler1 = new AlarmsDBHandler(MainActivity.this);
+                            AllAlarms = handler1.findAll();
+                            item_alarm.clear();
+                            if (AllAlarms.size() != 0) {
+                                System.out.println(AllAlarms);
+                                // String title = AllAlarms.get(1).getMtitle();
+                                for (int i = 0; i < AllAlarms.size(); i++) {
+                                    item_alarm.add("Title:\t" + AllAlarms.get(i).getMtitle() +
+                                            "\n" + "Date:\t" + AllAlarms.get(i).getMdate() +
+                                            "\n" + "Time:\t" + AllAlarms.get(i).getMtime() +
+                                            "\n" + "Address:\t" + AllAlarms.get(i).getMaddress()
+
+
+                                    );
+                                }
+                            }
+                                customAdapter = new CustomAdapter(MainActivity.this, item_alarm);
+                                //customAdapter.notifyDataSetChanged();
+                                lv.setAdapter(customAdapter);
+                                Toast.makeText(MainActivity.this, "Successfully deleted", Toast.LENGTH_SHORT).show();
+                            }
+
+                    });
+                    AlertDialog alert = builder.create();
+                    alert.show();
                     // TODO Auto-generated method stub
-                    Toast.makeText(context, "You Clicked "+ result.get(position), Toast.LENGTH_LONG).show();
-                    Bundle bundle = new Bundle();
-                    Intent intent = new Intent(MainActivity.this, AddAlarm.class);
-                    bundle.putInt("id",AllAlarms.get(position).getMid());
-                    bundle.putString("title", AllAlarms.get(position).getMtitle());
-                    bundle.putString("date", AllAlarms.get(position).getMdate());
-                    bundle.putString("time", AllAlarms.get(position).getMtime());
-                    bundle.putString("address", AllAlarms.get(position).getMaddress());
-                    flag = 1;
-                    bundle.putInt("flag",flag);
-                    intent.putExtras(bundle);
-                    startActivityForResult(intent, 1);
+
                 }
 
             });
@@ -182,6 +229,9 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(this, LocationService.class);
         if (!isMyServiceRunning(LocationService.class)) {
             startService(intent);
-        }    }
+        }
+    }
+
+    public void UpdateListView(){}
 }
 

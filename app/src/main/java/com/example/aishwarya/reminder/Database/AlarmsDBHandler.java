@@ -33,7 +33,7 @@ public class AlarmsDBHandler extends SQLiteOpenHelper {
     private static final String COLUMN_LONGITUDE = "alarm_longitude";
     private static final String COLUMN_ADDRESS = "alarm_address";
     private static final String COLUMN_TIMESTAMP = "alarm_timestamp";
-
+    private static final String COLUMN_ETIMESTAMP = "end_timestamp";
 
     public AlarmsDBHandler(Context context) {
         super(context, DATABASE_NAME, null , DATABASE_VERSION);
@@ -69,6 +69,23 @@ public class AlarmsDBHandler extends SQLiteOpenHelper {
                 + COLUMN_DATE + " = '" + date + "'" + " AND "
                 + COLUMN_TIME + " = '" + time + "'" + " AND "
                 + COLUMN_ADDRESS + " =  '" + address + "'";
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor c = db.rawQuery(query, null);
+        if (c.moveToFirst()) {
+            //Record exist
+            c.close();
+            return true;
+        }
+        //Record available
+        c.close();
+        return false;
+    }
+
+    public boolean isRecordClashing(String date, String time) {
+        String query = "SELECT * FROM " + TABLE_ALARMS + " WHERE "
+                + COLUMN_DATE + " = '" + date + "'" + " AND "
+                + COLUMN_TIME + " = '" + time + "'";
         SQLiteDatabase db = this.getReadableDatabase();
 
         Cursor c = db.rawQuery(query, null);
@@ -124,6 +141,22 @@ public class AlarmsDBHandler extends SQLiteOpenHelper {
         }
     }
 
+    public void deleteAlarm(Alarms alarms){
+
+        String query = "DELETE FROM " + TABLE_ALARMS + " WHERE " + COLUMN_TITLE + " = '" + alarms.getMtitle() + "'" + " AND "
+                + COLUMN_DATE + " = '" + alarms.getMdate() + "'" + " AND "
+                + COLUMN_TIME + " = '" + alarms.getMtime() + "'" + " AND "
+                + COLUMN_ADDRESS + " =  '" + alarms.getMaddress() + "'";
+
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        db.execSQL(query);
+
+        db.close();
+
+
+    }
+
     public Alarms findPreviousAlarm(Alarms alarms){
         String countQuery = "SELECT  * FROM " + TABLE_ALARMS;
         SQLiteDatabase db = this.getReadableDatabase();
@@ -131,7 +164,7 @@ public class AlarmsDBHandler extends SQLiteOpenHelper {
         int count = cursor.getCount();
         cursor.close();
 
-        if(count > 1) {
+        if(count >= 1) {
             String sqlQuery = "SELECT * FROM " + " ( SELECT * FROM " + TABLE_ALARMS + " ORDER BY " + COLUMN_TIMESTAMP + " DESC ) " + " WHERE (" + COLUMN_TIMESTAMP + " < " + alarms.getMtimestamp() + ") LIMIT 1";
 
 
@@ -163,7 +196,7 @@ public class AlarmsDBHandler extends SQLiteOpenHelper {
         int count = cursor.getCount();
         cursor.close();
 
-        if(count > 1) {
+        if(count >= 1) {
             String sqlQuery = "SELECT * FROM " + " ( SELECT * FROM " + TABLE_ALARMS + " ORDER BY " + COLUMN_TIMESTAMP + " ) " + " WHERE (" + COLUMN_TIMESTAMP + " > " + current_time + ") LIMIT 1";
 
 
@@ -187,39 +220,39 @@ public class AlarmsDBHandler extends SQLiteOpenHelper {
         return null;
     }
 
-//    public Alarms findNextAlarm(Alarms alarms){
-//        String countQuery = "SELECT  * FROM " + TABLE_ALARMS;
-//        SQLiteDatabase db = this.getReadableDatabase();
-//        Cursor cursor = db.rawQuery(countQuery, null);
-//        int count = cursor.getCount();
-//        cursor.close();
-//
-//        if(count > 1) {
-//            String sqlQuery = "SELECT * FROM " + " ( SELECT * FROM " + TABLE_ALARMS + " ORDER BY " + COLUMN_TIMESTAMP + " ) " + " WHERE (" + COLUMN_TIMESTAMP + " > " + alarms.getMtimestamp() + ") LIMIT 1";
-//
-//
-//            Cursor myCursor = db.rawQuery(sqlQuery, null);
-//            Alarms alarm = null;
-//            if (myCursor.moveToFirst()) {
-//                String title = myCursor.getString(1);
-//                String date = myCursor.getString(2);
-//                String time = myCursor.getString(3);
-//                Double latitude = myCursor.getDouble(4);
-//                Double longitude = myCursor.getDouble(5);
-//                String address = myCursor.getString(6);
-//                long timestmp = (myCursor.getLong(7));
-//
-//                alarm = new Alarms(title, date, time, latitude, longitude, address, timestmp);
-//            }
-//            myCursor.close();
-//            db.close();
-//            return alarm;
-//        }
-//        return null;
-//    }
+    public Alarms findNextAlarm(Alarms alarms){
+        String countQuery = "SELECT  * FROM " + TABLE_ALARMS;
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(countQuery, null);
+        int count = cursor.getCount();
+        cursor.close();
+
+        if(count >= 1) {
+            String sqlQuery = "SELECT * FROM " + " ( SELECT * FROM " + TABLE_ALARMS + " ORDER BY " + COLUMN_TIMESTAMP + " ) " + " WHERE (" + COLUMN_TIMESTAMP + " > " + alarms.getMtimestamp() + ") LIMIT 1";
+
+
+            Cursor myCursor = db.rawQuery(sqlQuery, null);
+            Alarms alarm = null;
+            if (myCursor.moveToFirst()) {
+                String title = myCursor.getString(1);
+                String date = myCursor.getString(2);
+                String time = myCursor.getString(3);
+                Double latitude = myCursor.getDouble(4);
+                Double longitude = myCursor.getDouble(5);
+                String address = myCursor.getString(6);
+                long timestmp = (myCursor.getLong(7));
+
+                alarm = new Alarms(title, date, time, latitude, longitude, address, timestmp);
+            }
+            myCursor.close();
+            db.close();
+            return alarm;
+        }
+        return null;
+    }
 
     public List<Alarms> findAll(){
-        String sqlQuery = "SELECT * FROM " + TABLE_ALARMS ;
+        String sqlQuery = "SELECT * FROM " + TABLE_ALARMS + " ORDER BY "+ COLUMN_TIMESTAMP;
 
         SQLiteDatabase db = this.getWritableDatabase();
 

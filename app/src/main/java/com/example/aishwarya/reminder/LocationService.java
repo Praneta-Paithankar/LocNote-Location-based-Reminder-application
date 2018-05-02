@@ -1,12 +1,17 @@
 package com.example.aishwarya.reminder;
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Location;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -62,7 +67,7 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
                 .addApi(LocationServices.API)
                 .build();
 
-        mLocationRequest.setInterval(900000);
+        mLocationRequest.setInterval(600000);
         mLocationRequest.setFastestInterval(600000);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         mLocationClient.connect();
@@ -83,7 +88,15 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
         mBuilder = new NotificationCompat.Builder(this, "LocationNotify")
                 .setSmallIcon(com.google.android.gms.R.drawable.common_google_signin_btn_icon_dark)
                 .setContentTitle("Location")
-                .setPriority(NotificationCompat.PRIORITY_HIGH);
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setDefaults(Notification.DEFAULT_SOUND)
+                .setDefaults(Notification.DEFAULT_VIBRATE)
+                .setDefaults(Notification.DEFAULT_LIGHTS);
+        mBuilder.setVibrate(new long[] { 1000, 1000, 1000, 1000, 1000 });
+
+        //LED
+        mBuilder.setLights(Color.RED, 3000, 3000);
+
         notificationManager = (NotificationManager) getSystemService(Service.NOTIFICATION_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             // Create the NotificationChannel, but only on API 26+ because
@@ -94,40 +107,47 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
             notificationManager.createNotificationChannel(channel);
         }
 
+
+
         mLocationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {
                 super.onLocationResult(locationResult);
-                Location location = locationResult.getLastLocation();
-                long time=0;
-                long time_difference=0;
-                Alarms next_alarm=null;
-                AlarmsDBHandler handler = new AlarmsDBHandler(LocationService.this);
-                long current_time = System.currentTimeMillis();
-                next_alarm = handler.findNextLocAlarm(current_time);
-                if(next_alarm!=null) {
-                    Log.d("LocationService", String.valueOf(current_time));
-                    Log.d("LocationService", String.valueOf(next_alarm.getMtitle()));
-                    time_difference = next_alarm.getMtimestamp() - current_time;
-                    Log.d("LocationService", String.valueOf(time_difference));
+                if (isNetworkAvailable()) {
+                    Location location = locationResult.getLastLocation();
+                    long time = 0;
+                    long time_difference = 0;
+                    Alarms next_alarm = null;
+                    //fetch the immediate next alarm from the database
+                    AlarmsDBHandler handler = new AlarmsDBHandler(LocationService.this);
+                    long current_time = System.currentTimeMillis();
+                    next_alarm = handler.findNextLocAlarm(current_time);
+                    if (next_alarm != null) {
+                        Log.d("LocationService", String.valueOf(current_time));
+                        Log.d("LocationService", String.valueOf(next_alarm.getMtitle()));
+                        time_difference = next_alarm.getMtimestamp() - current_time;
+                        Log.d("LocationService", String.valueOf(time_difference));
 
-                    try {
-                        time = CalculateTimeRequired(location, next_alarm.getMlatitude(), next_alarm.getMlongitude());
-                    } catch (ExecutionException e) {
-                        e.printStackTrace();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        try {
+                            time = CalculateTimeRequired(location, next_alarm.getMlatitude(), next_alarm.getMlongitude());
+                        } catch (ExecutionException e) {
+                            e.printStackTrace();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        //keeping buffer of 10 minutes if the time difference is
+                        // less than the time taken to reach the destination then notify user
+                       //if ((time_difference - 600000) <= (time * 1000)) {
+                            mBuilder.setContentText("Title: " + next_alarm.getMtitle() + "Time: " + (time / 60) + "min  net" + isNetworkAvailable() );
+                            notificationManager.notify(1, mBuilder.build());
+                     //   }
                     }
-                    //latitude=String.valueOf(location.getLatitude());
-                    //longitude=String.valueOf(location.getLongitude());
-
-
-                        if( (time_difference - 600000 )<= (time*1000)){
-                    mBuilder.setContentText("Title"+next_alarm.getMtitle()+"Time: " + (time / 60) + "");
-                    notificationManager.notify(1, mBuilder.build());
-                         }
+                    // sendMessageToUI(String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()));
                 }
-               // sendMessageToUI(String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()));
+                else{
+                    mBuilder.setContentText("Internet Conection Lost!!");
+                    notificationManager.notify(1, mBuilder.build());
+                }
             }
         };
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -163,6 +183,13 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
         Log.i("EXIT", "ondestroy!");
         Intent broadcastIntent = new Intent("LocationServiceRestart");
         sendBroadcast(broadcastIntent);
+    }
+
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 
     private void sendMessageToUI(String lat, String lng) {
