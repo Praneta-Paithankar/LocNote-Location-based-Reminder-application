@@ -25,9 +25,11 @@ import android.os.Bundle;
 import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
@@ -43,12 +45,14 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 
-public class AddAlarm extends AppCompatActivity implements TimeDistanceCalculation.TaskCompleted {
+public class AddAlarm extends AppCompatActivity implements TimeDistanceCalculation.TaskCompleted, AdapterView.OnItemSelectedListener {
     TextView btnDate, datetext, btnTime, timetext, destination_text;
     private Calendar calendar;
+    Spinner spinner1;
     EditText reminder_title;
     FloatingActionButton addalarm;
     String mtime;
+    String mode;
     StringBuilder mdate;
     Calendar cal;
     double latitude;
@@ -72,7 +76,7 @@ public class AddAlarm extends AppCompatActivity implements TimeDistanceCalculati
         reminder_title = (EditText) findViewById(R.id.reminder_title);
         addalarm = (FloatingActionButton) findViewById(R.id.starred2);
         destination_text = (TextView) findViewById(R.id.repeat_no_text);
-
+        spinner1 = (Spinner) findViewById(R.id.spinner);
         calendar = Calendar.getInstance();
         cal = Calendar.getInstance();
 
@@ -92,17 +96,32 @@ public class AddAlarm extends AppCompatActivity implements TimeDistanceCalculati
             longitude = b.getDouble("long");
             flag = b.getInt("flag");
             id = b.getInt("id");
+            mode = b.getString("mode");
 
         }
+        spinner1.setOnItemSelectedListener(AddAlarm.this);
+
     }
+
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        // On selecting a spinner item
+        mode= parent.getItemAtPosition(position).toString();
+
+        // Showing selected spinner item
+       // Toast.makeText(parent.getContext(), "Selected: " + item, Toast.LENGTH_LONG).show();
+    }
+    public void onNothingSelected(AdapterView<?> arg0) {
+        // TODO Auto-generated method stub
+    }
+
 
     //date picker dialog
     @SuppressWarnings("deprecation")
     public void onClickDate(View view) {
         showDialog(999);
-        Toast.makeText(getApplicationContext(), "date set",
-                Toast.LENGTH_SHORT)
-                .show();
+     //   Toast.makeText(getApplicationContext(), "date set",Toast.LENGTH_SHORT)
+        // .show();
     }
     @Override
     protected Dialog onCreateDialog(int id) {
@@ -209,7 +228,7 @@ public class AddAlarm extends AppCompatActivity implements TimeDistanceCalculati
                 Log.d(TAG, "Timestamp" + calendar.getTimeInMillis());
             } catch (Exception e) {
             }
-            Alarms alarms = new Alarms(title, date, time, latitude, longitude, address, current_timestamp);
+            Alarms alarms = new Alarms(title, date, time, latitude, longitude, address, current_timestamp, mode);
             AlarmsDBHandler handler = new AlarmsDBHandler(this);
 
             Alarms previous_alarm = handler.findPreviousAlarm(alarms);
@@ -245,7 +264,8 @@ public class AddAlarm extends AppCompatActivity implements TimeDistanceCalculati
                     else {
                         handler.addAlarm(alarms);
                     }
-                    Toast.makeText(this, date + time + title + latitude + longitude + Address + " Alarm added in database", Toast.LENGTH_SHORT).show();
+                //  Toast.makeText(this, mode ,Toast.LENGTH_SHORT).show();
+                  //  Toast.makeText(this, date + time + title + latitude + longitude + Address + " Alarm added in database", Toast.LENGTH_SHORT).show();
                     Intent resultIntent = new Intent();
                     setResult(Activity.RESULT_OK, resultIntent);
                     finish();
@@ -271,7 +291,9 @@ public class AddAlarm extends AppCompatActivity implements TimeDistanceCalculati
                     else {
                         handler.addAlarm(alarms);
                     }
-                    Toast.makeText(this, date + time + title + latitude + longitude + Address + " Alarm added in database", Toast.LENGTH_SHORT).show();
+                  //  Toast.makeText(this, mode ,Toast.LENGTH_SHORT).show();
+
+                    //    Toast.makeText(this, date + time + title + latitude + longitude + Address + " Alarm added in database", Toast.LENGTH_SHORT).show();
                     Intent resultIntent = new Intent();
                     setResult(Activity.RESULT_OK, resultIntent);
                     finish();
@@ -285,7 +307,9 @@ public class AddAlarm extends AppCompatActivity implements TimeDistanceCalculati
                 else {
                     handler.addAlarm(alarms);
                 }
-                Toast.makeText(this, date + time + title + latitude + longitude + Address + " Alarm added in database", Toast.LENGTH_SHORT).show();
+               // Toast.makeText(this, mode,Toast.LENGTH_SHORT).show();
+
+                //       Toast.makeText(this, date + time + title + latitude + longitude + Address + " Alarm added in database", Toast.LENGTH_SHORT).show();
                 Intent resultIntent = new Intent();
                 setResult(Activity.RESULT_OK, resultIntent);
                 finish();
@@ -336,7 +360,6 @@ public class AddAlarm extends AppCompatActivity implements TimeDistanceCalculati
             double source_lat = alarms.getMlatitude();
             double source_long = alarms.getMlongitude();
             str_origin = "origin=" + source_lat + "," + source_long;
-
             // Destination of route
             str_dest = "destination=" + latitude + "," + longitude;
         }
@@ -345,6 +368,8 @@ public class AddAlarm extends AppCompatActivity implements TimeDistanceCalculati
         {
             double source_lat = latitude;
             double source_long = longitude;
+            mode = alarms.getMmode();
+
             str_origin = "origin=" + source_lat + "," + source_long;
 
             // Destination of route
@@ -354,10 +379,10 @@ public class AddAlarm extends AppCompatActivity implements TimeDistanceCalculati
         // Sensor enabled
         String sensor = "sensor=false";
         // Travelling mode enable
-        String mode = "mode=driving";
+        String mode1 = "mode="+mode;
 
         // Building the parameters to the web service
-        String parameters = str_origin + "&" + str_dest + "&" + sensor + "&"+ mode;
+        String parameters = str_origin + "&" + str_dest + "&" + sensor + "&"+ mode1;
 
         // Output format
         String output = "json";
@@ -372,7 +397,7 @@ public class AddAlarm extends AppCompatActivity implements TimeDistanceCalculati
     @Override
     public void onTaskComplete(Long result) {
 
-        Toast.makeText(this,"The result is " + Long.toString(result),Toast.LENGTH_LONG).show();
+   //     Toast.makeText(this,"The result is " + Long.toString(result),Toast.LENGTH_LONG).show();
         Log.e(TAG, "Seconds"+ result );
     }
 

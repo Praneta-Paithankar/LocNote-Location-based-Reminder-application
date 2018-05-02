@@ -15,8 +15,9 @@ public class Alarms {
     private String maddress;
     private long mtimestamp;
     private int mid;
+    private String mmode;
 
-    public Alarms(int id, String title, String date, String time, double latitude, double longitude, String address, long timestamp_dummy){
+    public Alarms(int id, String title, String date, String time, double latitude, double longitude, String address, long timestamp_dummy, String mode){
         mid = id;
         mtitle = title;
         mdate = date;
@@ -25,9 +26,10 @@ public class Alarms {
         mlongitude = longitude;
         maddress = address;
         mtimestamp = timestamp_dummy;
+        mmode = mode;
     }
 
-    public Alarms( String title, String date, String time, double latitude, double longitude, String address, long timestamp_dummy){
+    public Alarms( String title, String date, String time, double latitude, double longitude, String address, long timestamp_dummy, String mode){
         mtitle = title;
         mdate = date;
         mtime = time ;
@@ -35,6 +37,7 @@ public class Alarms {
         mlongitude = longitude;
         maddress = address;
         mtimestamp = timestamp_dummy;
+        mmode = mode;
     }
 
     public String getMdate() {
@@ -99,5 +102,13 @@ public class Alarms {
 
     public void setMid(int mid) {
         this.mid = mid;
+    }
+
+    public String getMmode() {
+        return mmode;
+    }
+
+    public void setMmode(String mmode) {
+        this.mmode = mmode;
     }
 }

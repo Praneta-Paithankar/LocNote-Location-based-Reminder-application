@@ -67,8 +67,8 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
                 .addApi(LocationServices.API)
                 .build();
 
-        mLocationRequest.setInterval(600000);
-        mLocationRequest.setFastestInterval(600000);
+        mLocationRequest.setInterval(300000);
+        mLocationRequest.setFastestInterval(300000);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         mLocationClient.connect();
         return START_STICKY;
@@ -113,6 +113,8 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
             @Override
             public void onLocationResult(LocationResult locationResult) {
                 super.onLocationResult(locationResult);
+
+
                 if (isNetworkAvailable()) {
                     Location location = locationResult.getLastLocation();
                     long time = 0;
@@ -123,24 +125,26 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
                     long current_time = System.currentTimeMillis();
                     next_alarm = handler.findNextLocAlarm(current_time);
                     if (next_alarm != null) {
+
+
+                        time_difference = next_alarm.getMtimestamp() - current_time;
                         Log.d("LocationService", String.valueOf(current_time));
                         Log.d("LocationService", String.valueOf(next_alarm.getMtitle()));
-                        time_difference = next_alarm.getMtimestamp() - current_time;
                         Log.d("LocationService", String.valueOf(time_difference));
 
                         try {
-                            time = CalculateTimeRequired(location, next_alarm.getMlatitude(), next_alarm.getMlongitude());
+                            time = CalculateTimeRequired(location, next_alarm.getMlatitude(), next_alarm.getMlongitude(),next_alarm.getMmode());
                         } catch (ExecutionException e) {
                             e.printStackTrace();
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
                         //keeping buffer of 10 minutes if the time difference is
-                        // less than the time taken to reach the destination then notify user
-                       //if ((time_difference - 600000) <= (time * 1000)) {
-                            mBuilder.setContentText("Title: " + next_alarm.getMtitle() + "Time: " + (time / 60) + "min  net" + isNetworkAvailable() );
+                        // less than the time taken to reach the destination then notify user\
+                        if (((time_difference - 600000) <= (time * 1000))) {
+                            mBuilder.setContentText(next_alarm.getMtitle() + " " + (time / 60) + " minutes away!" );
                             notificationManager.notify(1, mBuilder.build());
-                     //   }
+                        }
                     }
                     // sendMessageToUI(String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()));
                 }
@@ -201,7 +205,7 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 
-    public long CalculateTimeRequired(Location location, double latitude, double longitude) throws ExecutionException, InterruptedException {
+    public long CalculateTimeRequired(Location location, double latitude, double longitude, String mode) throws ExecutionException, InterruptedException {
         double source_lat = location.getLatitude();
         double source_long = location.getLongitude();
         String str_origin = "origin=" + source_lat + "," + source_long;
@@ -211,10 +215,10 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
         // Sensor enabled
         String sensor = "sensor=false";
         // Travelling mode enable
-        String mode = "mode=driving";
+        String mode1 = "mode=" + mode;
 
         // Building the parameters to the web service
-        String parameters = str_origin + "&" + str_dest + "&" + sensor + "&"+ mode;
+        String parameters = str_origin + "&" + str_dest + "&" + sensor + "&"+ mode1;
 
         // Output format
         String output = "json";
@@ -229,7 +233,7 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
     @Override
     public void onTaskComplete(Long result) {
 
-        Toast.makeText(this,"The result is " + Long.toString(result),Toast.LENGTH_LONG).show();
+      //  Toast.makeText(this,"The result is " + Long.toString(result),Toast.LENGTH_LONG).show();
         Log.e(TAG, "Seconds"+ result );
     }
 

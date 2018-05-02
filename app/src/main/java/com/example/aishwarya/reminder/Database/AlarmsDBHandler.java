@@ -33,7 +33,7 @@ public class AlarmsDBHandler extends SQLiteOpenHelper {
     private static final String COLUMN_LONGITUDE = "alarm_longitude";
     private static final String COLUMN_ADDRESS = "alarm_address";
     private static final String COLUMN_TIMESTAMP = "alarm_timestamp";
-    private static final String COLUMN_ETIMESTAMP = "end_timestamp";
+    private static final String COLUMN_MODE = "alarm_mode";
 
     public AlarmsDBHandler(Context context) {
         super(context, DATABASE_NAME, null , DATABASE_VERSION);
@@ -51,7 +51,8 @@ public class AlarmsDBHandler extends SQLiteOpenHelper {
                 COLUMN_LATITUDE+ " TEXT, "+
                 COLUMN_LONGITUDE+ " TEXT, "+
                 COLUMN_ADDRESS+ " TEXT, " +
-                COLUMN_TIMESTAMP+ " LONG)";
+                COLUMN_TIMESTAMP+ " LONG, " +
+                COLUMN_MODE+ " TEXT)";
 
         db.execSQL(CREATE_ALARM_TABLE);
 
@@ -111,7 +112,7 @@ public class AlarmsDBHandler extends SQLiteOpenHelper {
             values.put(COLUMN_LONGITUDE, alarm.getMlongitude());
             values.put(COLUMN_ADDRESS, alarm.getMaddress());
             values.put(COLUMN_TIMESTAMP, (alarm.getMtimestamp()));
-
+            values.put(COLUMN_MODE, (alarm.getMmode()));
             SQLiteDatabase db = this.getWritableDatabase();
 
             db.insert(TABLE_ALARMS, null, values);
@@ -132,6 +133,7 @@ public class AlarmsDBHandler extends SQLiteOpenHelper {
             values.put(COLUMN_LONGITUDE, alarm.getMlongitude());
             values.put(COLUMN_ADDRESS, alarm.getMaddress());
             values.put(COLUMN_TIMESTAMP, (alarm.getMtimestamp()));
+            values.put(COLUMN_MODE, (alarm.getMmode()));
 
             SQLiteDatabase db = this.getWritableDatabase();
 
@@ -178,8 +180,9 @@ public class AlarmsDBHandler extends SQLiteOpenHelper {
                 Double longitude = myCursor.getDouble(5);
                 String address = myCursor.getString(6);
                 long timestmp = (myCursor.getLong(7));
+                String mode = (myCursor.getString(8));
 
-                alarm = new Alarms(title, date, time, latitude, longitude, address, timestmp);
+                alarm = new Alarms( title, date, time, latitude, longitude, address, timestmp, mode);
             }
             myCursor.close();
             db.close();
@@ -210,8 +213,9 @@ public class AlarmsDBHandler extends SQLiteOpenHelper {
                 Double longitude = myCursor.getDouble(5);
                 String address = myCursor.getString(6);
                 long timestmp = (myCursor.getLong(7));
+                String mode = (myCursor.getString(8));
 
-                alarm = new Alarms(title, date, time, latitude, longitude, address, timestmp);
+                alarm = new Alarms(title, date, time, latitude, longitude, address, timestmp, mode);
             }
             myCursor.close();
             db.close();
@@ -241,8 +245,9 @@ public class AlarmsDBHandler extends SQLiteOpenHelper {
                 Double longitude = myCursor.getDouble(5);
                 String address = myCursor.getString(6);
                 long timestmp = (myCursor.getLong(7));
+                String mode = (myCursor.getString(8));
 
-                alarm = new Alarms(title, date, time, latitude, longitude, address, timestmp);
+                alarm = new Alarms(title, date, time, latitude, longitude, address, timestmp, mode);
             }
             myCursor.close();
             db.close();
@@ -271,8 +276,10 @@ public class AlarmsDBHandler extends SQLiteOpenHelper {
                 Double longitude = myCursor.getDouble(5);
                 String address = myCursor.getString(6);
                 long timestmp = (myCursor.getLong(7));
+                String mode = (myCursor.getString(8));
 
-                alarm = new Alarms(id,title,date,time,latitude,longitude,address,timestmp);
+
+                alarm = new Alarms(id,title,date,time,latitude,longitude,address,timestmp, mode);
                 AllAlarms.add(alarm);
                 myCursor.moveToNext();
             }

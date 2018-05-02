@@ -151,7 +151,7 @@ public class MainActivity extends AppCompatActivity {
                     builder.setPositiveButton("Edit", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int which){
                             //I cannot get access to the marker in here
-                            Toast.makeText(context, "You Clicked "+ result.get(position), Toast.LENGTH_LONG).show();
+                          //  Toast.makeText(context, "You Clicked "+ result.get(position), Toast.LENGTH_LONG).show();
                             Bundle bundle = new Bundle();
                             Intent intent = new Intent(MainActivity.this, AddAlarm.class);
                             bundle.putInt("id",AllAlarms.get(position).getMid());
@@ -162,6 +162,7 @@ public class MainActivity extends AppCompatActivity {
                             bundle.putString("date", AllAlarms.get(position).getMdate());
                             bundle.putString("time", AllAlarms.get(position).getMtime());
                             bundle.putString("address", AllAlarms.get(position).getMaddress());
+                            bundle.putString("mode",AllAlarms.get(position).getMmode());
                             flag = 1;
                             bundle.putInt("flag",flag);
                             intent.putExtras(bundle);
