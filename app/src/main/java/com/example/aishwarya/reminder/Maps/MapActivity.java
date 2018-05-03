@@ -97,7 +97,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         mInfo = (ImageView)findViewById(R.id.place_info);
         mPlacePicker = (ImageView) findViewById(R.id.place_picker);
         getLocationPermission();
-        //init();
     }
 
 
@@ -263,7 +262,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
         mMap.clear();
 
-        //mMap.setInfoWindowAdapter(new CustomInfoWindowAdapter(MapActivity.this));
 
         if(placeInfo != null){
             try{

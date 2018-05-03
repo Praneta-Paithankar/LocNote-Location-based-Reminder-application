@@ -1,7 +1,5 @@
 package com.example.aishwarya.reminder.Database;
 
-import java.sql.Timestamp;
-
 /**
  * Created by aishwarya on 24/04/18.
  */

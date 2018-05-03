@@ -109,7 +109,6 @@ public class AddAlarm extends AppCompatActivity implements TimeDistanceCalculati
         mode= parent.getItemAtPosition(position).toString();
 
         // Showing selected spinner item
-       // Toast.makeText(parent.getContext(), "Selected: " + item, Toast.LENGTH_LONG).show();
     }
     public void onNothingSelected(AdapterView<?> arg0) {
         // TODO Auto-generated method stub
@@ -120,8 +119,6 @@ public class AddAlarm extends AppCompatActivity implements TimeDistanceCalculati
     @SuppressWarnings("deprecation")
     public void onClickDate(View view) {
         showDialog(999);
-     //   Toast.makeText(getApplicationContext(), "date set",Toast.LENGTH_SHORT)
-        // .show();
     }
     @Override
     protected Dialog onCreateDialog(int id) {
@@ -264,8 +261,6 @@ public class AddAlarm extends AppCompatActivity implements TimeDistanceCalculati
                     else {
                         handler.addAlarm(alarms);
                     }
-                //  Toast.makeText(this, mode ,Toast.LENGTH_SHORT).show();
-                  //  Toast.makeText(this, date + time + title + latitude + longitude + Address + " Alarm added in database", Toast.LENGTH_SHORT).show();
                     Intent resultIntent = new Intent();
                     setResult(Activity.RESULT_OK, resultIntent);
                     finish();
@@ -291,9 +286,7 @@ public class AddAlarm extends AppCompatActivity implements TimeDistanceCalculati
                     else {
                         handler.addAlarm(alarms);
                     }
-                  //  Toast.makeText(this, mode ,Toast.LENGTH_SHORT).show();
 
-                    //    Toast.makeText(this, date + time + title + latitude + longitude + Address + " Alarm added in database", Toast.LENGTH_SHORT).show();
                     Intent resultIntent = new Intent();
                     setResult(Activity.RESULT_OK, resultIntent);
                     finish();
@@ -307,9 +300,7 @@ public class AddAlarm extends AppCompatActivity implements TimeDistanceCalculati
                 else {
                     handler.addAlarm(alarms);
                 }
-               // Toast.makeText(this, mode,Toast.LENGTH_SHORT).show();
 
-                //       Toast.makeText(this, date + time + title + latitude + longitude + Address + " Alarm added in database", Toast.LENGTH_SHORT).show();
                 Intent resultIntent = new Intent();
                 setResult(Activity.RESULT_OK, resultIntent);
                 finish();
@@ -397,7 +388,6 @@ public class AddAlarm extends AppCompatActivity implements TimeDistanceCalculati
     @Override
     public void onTaskComplete(Long result) {
 
-   //     Toast.makeText(this,"The result is " + Long.toString(result),Toast.LENGTH_LONG).show();
         Log.e(TAG, "Seconds"+ result );
     }
 

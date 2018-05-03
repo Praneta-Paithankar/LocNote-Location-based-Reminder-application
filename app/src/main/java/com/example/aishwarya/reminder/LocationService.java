@@ -44,6 +44,7 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
     public static final String EXTRA_LATITUDE = "extra_latitude";
     public static final String EXTRA_LONGITUDE = "extra_longitude";
     private static final String TAG = LocationService.class.getSimpleName();
+    private int novibrate =0;
     //String latitude;
     //String longitude;
     GoogleApiClient mLocationClient;
@@ -67,8 +68,8 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
                 .addApi(LocationServices.API)
                 .build();
 
-        mLocationRequest.setInterval(300000);
-        mLocationRequest.setFastestInterval(300000);
+        mLocationRequest.setInterval(600000);
+        mLocationRequest.setFastestInterval(600000);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         mLocationClient.connect();
         return START_STICKY;
@@ -85,6 +86,7 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
     public void onConnected(@Nullable Bundle bundle) {
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
+
         mBuilder = new NotificationCompat.Builder(this, "LocationNotify")
                 .setSmallIcon(com.google.android.gms.R.drawable.common_google_signin_btn_icon_dark)
                 .setContentTitle("Location")
@@ -92,7 +94,6 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
                 .setDefaults(Notification.DEFAULT_SOUND)
                 .setDefaults(Notification.DEFAULT_VIBRATE)
                 .setDefaults(Notification.DEFAULT_LIGHTS);
-        mBuilder.setVibrate(new long[] { 1000, 1000, 1000, 1000, 1000 });
 
         //LED
         mBuilder.setLights(Color.RED, 3000, 3000);
@@ -143,10 +144,12 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
                         // less than the time taken to reach the destination then notify user\
                         if (((time_difference - 600000) <= (time * 1000))) {
                             mBuilder.setContentText(next_alarm.getMtitle() + " " + (time / 60) + " minutes away!" );
+                            if(novibrate==0 || ((time_difference) <= (time * 1000))) {
+                                mBuilder.setVibrate(new long[]{1000, 1000, 1000, 1000, 1000});
+                            }
                             notificationManager.notify(1, mBuilder.build());
                         }
                     }
-                    // sendMessageToUI(String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude()));
                 }
                 else{
                     mBuilder.setContentText("Internet Conection Lost!!");
@@ -166,7 +169,6 @@ public class LocationService extends Service implements GoogleApiClient.Connecti
             return;
         }
         mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, null);
-        //LocationServices.FusedLocationApi.requestLocationUpdates(mLocationClient, mLocationRequest, this);
 
 
     }

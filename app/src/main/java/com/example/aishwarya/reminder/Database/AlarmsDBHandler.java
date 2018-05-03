@@ -5,14 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-
-
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -80,6 +73,7 @@ public class AlarmsDBHandler extends SQLiteOpenHelper {
         }
         //Record available
         c.close();
+        db.close();
         return false;
     }
 
@@ -97,6 +91,7 @@ public class AlarmsDBHandler extends SQLiteOpenHelper {
         }
         //Record available
         c.close();
+        db.close();
         return false;
     }
 
